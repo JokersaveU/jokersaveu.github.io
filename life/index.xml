@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Lives on Reason Cave</title>
+    <link>/life/</link>
+    <description>Recent content in Lives on Reason Cave</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-CN</language>
+    <managingEditor>a478723530@gmail.com (Reason Cave)</managingEditor>
+    <webMaster>a478723530@gmail.com (Reason Cave)</webMaster>
+    <copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><atom:link href="/life/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>我的第一篇博客</title>
+      <link>/life/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <author>a478723530@gmail.com (Reason Cave)</author>
+      <guid>/life/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/</guid>
+      <description>前言 很难说出于一种什么样的心情和目的想要去做一个自己的博客，无论是记录自己的生活还是与他人分享，都算是当下的一种目的，更多地可能是想要发出一</description>
+    </item>
+    
+  </channel>
+</rss>

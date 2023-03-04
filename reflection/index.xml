@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Reflections on Reason Cave</title>
+    <link>/reflection/</link>
+    <description>Recent content in Reflections on Reason Cave</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-CN</language>
+    <managingEditor>a478723530@gmail.com (Reason Cave)</managingEditor>
+    <webMaster>a478723530@gmail.com (Reason Cave)</webMaster>
+    <copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><atom:link href="/reflection/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>自我与世界</title>
+      <link>/reflection/%E8%87%AA%E6%88%91%E4%B8%8E%E4%B8%96%E7%95%8C/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <author>a478723530@gmail.com (Reason Cave)</author>
+      <guid>/reflection/%E8%87%AA%E6%88%91%E4%B8%8E%E4%B8%96%E7%95%8C/</guid>
+      <description>一份关于自我与世界的思考 在这里很难交出一份令自己满意的答卷，不论是自己所学，还是自己所思，目前为止都很难准确地将客观的或者主观的部分描述清楚</description>
+    </item>
+    
+  </channel>
+</rss>

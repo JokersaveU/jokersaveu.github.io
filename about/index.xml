@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Abouts on Reason Cave</title>
+    <link>/about/</link>
+    <description>Recent content in Abouts on Reason Cave</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-CN</language>
+    <managingEditor>a478723530@gmail.com (Reason Cave)</managingEditor>
+    <webMaster>a478723530@gmail.com (Reason Cave)</webMaster>
+    <copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><atom:link href="/about/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>关于我</title>
+      <link>/about/%E5%85%B3%E4%BA%8E%E6%88%91/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <author>a478723530@gmail.com (Reason Cave)</author>
+      <guid>/about/%E5%85%B3%E4%BA%8E%E6%88%91/</guid>
+      <description>一份未完成的自我介绍 骑驴走马</description>
+    </item>
+    
+  </channel>
+</rss>

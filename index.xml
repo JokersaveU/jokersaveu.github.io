@@ -1,0 +1,42 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Reason Cave</title>
+        <link>/</link>
+        <description>Reason Cave personal blog</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>a478723530@gmail.com (Reason Cave)</managingEditor>
+            <webMaster>a478723530@gmail.com (Reason Cave)</webMaster><copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright>
+            <atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+        <item>
+    <title>PG内核</title>
+    <link>/coding/pg%E5%86%85%E6%A0%B8/</link>
+    <pubDate>Mon, 01 Jan 0001 00:00:00 &#43;0000</pubDate>
+    <author>Season Cave</author>
+    <guid>/coding/pg%E5%86%85%E6%A0%B8/</guid>
+    <description><![CDATA[第一篇送给我从事的工作 Postgresql Kernel Query Parse 根据用户的查询语句生成数据库中最优执行计划。 Inroduction 命令类型 模块 简单命令(建表，创建用户，备份) 功能性命令处理 SELECT/INSERT/DELETE/UPDATE 查询]]></description>
+</item>
+<item>
+    <title>关于我</title>
+    <link>/about/%E5%85%B3%E4%BA%8E%E6%88%91/</link>
+    <pubDate>Mon, 01 Jan 0001 00:00:00 &#43;0000</pubDate>
+    <author>Season Cave</author>
+    <guid>/about/%E5%85%B3%E4%BA%8E%E6%88%91/</guid>
+    <description><![CDATA[一份未完成的自我介绍 骑驴走马]]></description>
+</item>
+<item>
+    <title>我的第一篇博客</title>
+    <link>/life/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/</link>
+    <pubDate>Mon, 01 Jan 0001 00:00:00 &#43;0000</pubDate>
+    <author>Season Cave</author>
+    <guid>/life/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/</guid>
+    <description><![CDATA[前言 很难说出于一种什么样的心情和目的想要去做一个自己的博客，无论是记录自己的生活还是与他人分享，都算是当下的一种目的，更多地可能是想要发出一]]></description>
+</item>
+<item>
+    <title>自我与世界</title>
+    <link>/reflection/%E8%87%AA%E6%88%91%E4%B8%8E%E4%B8%96%E7%95%8C/</link>
+    <pubDate>Mon, 01 Jan 0001 00:00:00 &#43;0000</pubDate>
+    <author>Season Cave</author>
+    <guid>/reflection/%E8%87%AA%E6%88%91%E4%B8%8E%E4%B8%96%E7%95%8C/</guid>
+    <description><![CDATA[一份关于自我与世界的思考 在这里很难交出一份令自己满意的答卷，不论是自己所学，还是自己所思，目前为止都很难准确地将客观的或者主观的部分描述清楚]]></description>
+</item>
+</channel>
+</rss>

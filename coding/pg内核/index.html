@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>PG内核 - Reason Cave</title><meta name="Description" content="Reason Cave personal blog"><meta property="og:title" content="PG内核" />
+<meta property="og:description" content="第一篇送给我从事的工作 Postgresql Kernel Query Parse 根据用户的查询语句生成数据库中最优执行计划。 Inroduction 命令类型 模块 简单命令(建表，创建用户，备份) 功能性命令处理 SELECT/INSERT/DELETE/UPDATE 查询" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/coding/pg%E5%86%85%E6%A0%B8/" /><meta property="og:image" content="/logo.png"/><meta property="article:section" content="coding" />
+
+<meta property="og:site_name" content="Reason Cave" />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="/logo.png"/>
+
+<meta name="twitter:title" content="PG内核"/>
+<meta name="twitter:description" content="第一篇送给我从事的工作 Postgresql Kernel Query Parse 根据用户的查询语句生成数据库中最优执行计划。 Inroduction 命令类型 模块 简单命令(建表，创建用户，备份) 功能性命令处理 SELECT/INSERT/DELETE/UPDATE 查询"/>
+<meta name="application-name" content="Reason Cave">
+<meta name="apple-mobile-web-app-title" content="Reason Cave"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="/coding/pg%E5%86%85%E6%A0%B8/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "PG内核",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "\/coding\/pg%E5%86%85%E6%A0%B8\/"
+        },"image": [{
+                            "@type": "ImageObject",
+                            "url": "\/images\/Apple-Devices-Preview.png",
+                            "width":  3200 ,
+                            "height":  2048 
+                        }],"genre": "posts","wordcount":  1273 ,
+        "url": "\/coding\/pg%E5%86%85%E6%A0%B8\/","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
+            "@type": "Organization",
+            "name": "xxxx","logo": {
+                    "@type": "ImageObject",
+                    "url": "\/images\/10.jpg",
+                    "width":  768 ,
+                    "height":  768 
+                }},"author": {
+                "@type": "Person",
+                "name": "Season Cave"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('light' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'light' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Reason Cave"><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/coding/"> 编程 </a><a class="menu-item" href="/life/"> 生活 </a><a class="menu-item" href="/reflection/"> 思索 </a><a class="menu-item" href="/about/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a><a href="javascript:void(0);" class="menu-item language" title="选择语言">
+                    <i class="fa fa-globe" aria-hidden="true"></i>                      
+                    <select class="language-select" id="language-select-desktop" onchange="location = this.value;"><option value="/coding/pg%E5%86%85%E6%A0%B8/" selected>简体中文</option></select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Reason Cave"><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/coding/" title="">编程</a><a class="menu-item" href="/life/" title="">生活</a><a class="menu-item" href="/reflection/" title="">思索</a><a class="menu-item" href="/about/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a><a href="javascript:void(0);" class="menu-item" title="选择语言">
+                    <i class="fa fa-globe fa-fw" aria-hidden="true"></i>
+                    <select class="language-select" onchange="location = this.value;"><option value="/coding/pg%E5%86%85%E6%A0%B8/" selected>简体中文</option></select>
+                </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">PG内核</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Season Cave</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="10112-01-18">10112-01-18</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1273 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 3 分钟&nbsp;<span id="/coding/pg%E5%86%85%E6%A0%B8/" class="leancloud_visitors" data-flag-title="PG内核">
+                        <i class="far fa-eye fa-fw" aria-hidden="true"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;次阅读
+                    </span>&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#第一篇送给我从事的工作">第一篇送给我从事的工作</a></li>
+      </ul>
+    </li>
+  </ul>
+
+  <ul>
+    <li><a href="#query-parse">Query Parse</a>
+      <ul>
+        <li><a href="#inroduction">Inroduction</a></li>
+        <li><a href="#query-analyze">Query Analyze</a>
+          <ul>
+            <li><a href="#lex-and-yacc">Lex and Yacc</a>
+              <ul>
+                <li><a href="#lex">Lex</a></li>
+                <li><a href="#yacc">Yacc</a></li>
+              </ul>
+            </li>
+            <li><a href="#lexical-and-syntactic-analysis">Lexical and Syntactic Analysis</a>
+              <ul>
+                <li><a href="#distinct-clause">DISTINCT Clause</a></li>
+                <li><a href="#target-attribute">TARGET ATTRIBUTE</a></li>
+                <li><a href="#from-clause">FROM CLAUSE</a></li>
+                <li><a href="#where-clause">WHERE CLAUSE</a></li>
+                <li><a href="#group-by-clause">GROUP BY CLAUSE</a></li>
+                <li><a href="#having-clause-and-order-by-clause">HAVING CLAUSE AND ORDER BY CLAUSE</a></li>
+              </ul>
+            </li>
+            <li><a href="#semantic-analysis">Semantic Analysis</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="#query-execution">Query Execution</a>
+      <ul>
+        <li><a href="#plan-node">Plan Node</a>
+          <ul>
+            <li><a href="#scan-node">Scan Node</a>
+              <ul>
+                <li><a href="#seqscannode">SeqScanNode</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h3 id="第一篇送给我从事的工作">第一篇送给我从事的工作</h3>
+<h1 id="postgresql-kernel">Postgresql Kernel</h1>
+<h2 id="query-parse">Query Parse</h2>
+<p>根据用户的查询语句生成数据库中最优执行计划。</p>
+<h3 id="inroduction">Inroduction</h3>
+<table>
+<thead>
+<tr>
+<th>命令类型</th>
+<th>模块</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>简单命令(建表，创建用户，备份)</td>
+<td>功能性命令处理</td>
+<td></td>
+</tr>
+<tr>
+<td>SELECT/INSERT/DELETE/UPDATE</td>
+<td>查询树-&gt;查询重写-&gt;生成最优路径-&gt;执行计划</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>查询优化主要处理生成路径和生成计划。查询执行时，表连接开销最大。</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>模块</th>
+<th></th>
+<th>功能说明</th>
+<th>源码路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>查询编译</td>
+<td>查询分析</td>
+<td></td>
+<td>由SQL查询语句生成查询树</td>
+<td>src/backend/parser</td>
+</tr>
+<tr>
+<td></td>
+<td>查询重写</td>
+<td></td>
+<td>对查询书重写并生成新的查询树以支持规则和视图</td>
+<td>src/backend/rewrite</td>
+</tr>
+<tr>
+<td></td>
+<td>查询优化</td>
+<td>生成路径</td>
+<td>由查询树计算最优路径</td>
+<td>src/backend/optimizer/path</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>生成计划</td>
+<td>通过最优路径生成计划</td>
+<td>src/backend/optimizer/plan</td>
+</tr>
+<tr>
+<td>查询执行</td>
+<td>执行计划</td>
+<td></td>
+<td>执行生成的计划</td>
+<td>src/backend/executor</td>
+</tr>
+<tr>
+<td></td>
+<td>调度</td>
+<td></td>
+<td>将请求分配到合适的处理模块</td>
+<td>src/backend/tcop</td>
+</tr>
+<tr>
+<td></td>
+<td>附件命令处理</td>
+<td></td>
+<td>处理建表,备份等命令</td>
+<td>src/backend/commands</td>
+</tr>
+</tbody>
+</table>
+<h3 id="query-analyze">Query Analyze</h3>
+<p>用户输入的SQL命令&mdash;&mdash;&gt;词法分析，语法分析&mdash;-&gt;分析树&mdash;-&gt;语义分析&mdash;&mdash;-&gt;查询树</p>
+<table>
+<thead>
+<tr>
+<th>输入</th>
+<th>功能模块</th>
+<th>函数</th>
+<th>输出</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td>exec_simple_query</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>SQL命令</td>
+<td>词法分析</td>
+<td>pg_parse_query/pg_raw_parser</td>
+<td></td>
+<td>可在此处根据兼容性要求，</td>
+</tr>
+<tr>
+<td></td>
+<td>语法分析</td>
+<td>pg_parse_query/pg_raw_parser</td>
+<td>分析树</td>
+<td>选择封装一层选择合适的解析器</td>
+</tr>
+<tr>
+<td></td>
+<td>语义分析</td>
+<td>pg_analyze_and_rewrite</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>parse_analyzer</td>
+<td>查询树</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h4 id="lex-and-yacc">Lex and Yacc</h4>
+<table>
+<thead>
+<tr>
+<th>工具名称</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lex</td>
+<td>生成扫描器，其能识别模式如数字、字符串、特殊符号。</td>
+</tr>
+<tr>
+<td>Yacc</td>
+<td>生成语法分析器，识别模式的组合，即语法。</td>
+</tr>
+<tr>
+<td>共同</td>
+<td>生成用于词法分析和语法分析的源代码，使用符号表，通过yylval传递表示的值。</td>
+</tr>
+</tbody>
+</table>
+<h5 id="lex">Lex</h5>
+<p>通过正则表示式进行模式识别。</p>
+<p><strong>Lex代码文件.l的基本结构</strong></p>
+<table>
+<thead>
+<tr>
+<th>代码段</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>定义</td>
+<td>包含C语言头文件，符号说明，其代码会被拷贝到生成的扫描器代码中</td>
+</tr>
+<tr>
+<td>规则</td>
+<td>利用正则表达式来匹配模式，每当成功匹配一个模式，就对应气候的{}中的代码，这些匹配规则及动作都会反映到扫描器代码中</td>
+</tr>
+<tr>
+<td>代码</td>
+<td>可以是任意C代码，但是其中必须调用Lex提供的函数</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>其中各段由%%分隔</p>
+<p><strong>Lex函数</strong></p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>yylex</td>
+<td>开始分析工作。由lex自动生成。</td>
+</tr>
+<tr>
+<td>yywrap</td>
+<td>在文件末尾调用。方法是使用yyin文件指针指向不同的文件。yywrap返回1表示解析结束</td>
+</tr>
+<tr>
+<td>yyless</td>
+<td>送回除了前n个字符外的所有读出标记</td>
+</tr>
+<tr>
+<td>yymore</td>
+<td>告诉Lexer将下一个标记附加到当前标记后</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Lex变量</strong></p>
+<table>
+<thead>
+<tr>
+<th>变量</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>yyin</td>
+<td>FILE *类型。lexer正在解析的文件。</td>
+</tr>
+<tr>
+<td>yyout</td>
+<td>FILE* 类型。指向lexer输出的位置。</td>
+</tr>
+<tr>
+<td>yytext</td>
+<td></td>
+</tr>
+<tr>
+<td>yyleng</td>
+<td></td>
+</tr>
+<tr>
+<td>yylineno</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h5 id="yacc">Yacc</h5>
+<h4 id="lexical-and-syntactic-analysis">Lexical and Syntactic Analysis</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-sql" data-lang="sql"><span class="line"><span class="cl"><span class="k">SELECT</span><span class="w"> </span><span class="n">classno</span><span class="p">,</span><span class="n">classname</span><span class="p">,</span><span class="w"> </span><span class="k">AVG</span><span class="p">(</span><span class="n">score</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">avg_score</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="k">FROM</span><span class="w"> </span><span class="n">sc</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">from</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="k">where</span><span class="w"> </span><span class="k">class</span><span class="p">.</span><span class="n">gno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;2005&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">sub</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="k">where</span><span class="w"> </span><span class="n">sc</span><span class="p">.</span><span class="n">sno</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="k">select</span><span class="w"> </span><span class="n">sno</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">student</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">student</span><span class="w"> </span><span class="n">WHRER</span><span class="w"> </span><span class="n">student</span><span class="p">.</span><span class="n">classno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">classno</span><span class="p">)</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">sc</span><span class="p">.</span><span class="n">cno</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="k">SELECT</span><span class="w"> </span><span class="n">course</span><span class="p">.</span><span class="n">cno</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">course</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">course</span><span class="p">.</span><span class="n">cname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;高等数学&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">classno</span><span class="p">,</span><span class="w"> </span><span class="n">classname</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="k">HAVING</span><span class="w"> </span><span class="k">AVG</span><span class="p">(</span><span class="n">score</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">80</span><span class="p">.</span><span class="mi">0</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">avg_score</span><span class="p">;</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>Example Statemet</p>
+<h5 id="distinct-clause">DISTINCT Clause</h5>
+<h5 id="target-attribute">TARGET ATTRIBUTE</h5>
+<h5 id="from-clause">FROM CLAUSE</h5>
+<h5 id="where-clause">WHERE CLAUSE</h5>
+<h5 id="group-by-clause">GROUP BY CLAUSE</h5>
+<h5 id="having-clause-and-order-by-clause">HAVING CLAUSE AND ORDER BY CLAUSE</h5>
+<h4 id="semantic-analysis">Semantic Analysis</h4>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>功能</th>
+<th>层级</th>
+<th style="text-align:left">输入</th>
+<th>输出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>exec_simple_query</td>
+<td>对每颗分析树调用pg_analyze_and_rewrite</td>
+<td>1</td>
+<td style="text-align:left">parsetreelist</td>
+<td></td>
+</tr>
+<tr>
+<td>pg_analyze_and_rewrite</td>
+<td>语义分析和查询重写</td>
+<td>2</td>
+<td style="text-align:left">单棵分析数</td>
+<td>查询树链表</td>
+</tr>
+<tr>
+<td>parse_analyze</td>
+<td>语义分析</td>
+<td>3</td>
+<td style="text-align:left">单棵分析数</td>
+<td>单棵查询树</td>
+</tr>
+<tr>
+<td>pg_rewrite_query</td>
+<td>查询重写</td>
+<td>3</td>
+<td style="text-align:left">单棵查询树</td>
+<td>查询树链表</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Query Struct</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>name</th>
+<th>comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NodeTag</td>
+<td>type</td>
+<td>节点类型，T_Query</td>
+</tr>
+<tr>
+<td>CmdType</td>
+<td>commandType</td>
+<td>命令类型</td>
+</tr>
+<tr>
+<td>QuerySource</td>
+<td>querySource</td>
+<td>是原始查询还是来自于规则的查询</td>
+</tr>
+<tr>
+<td>bool</td>
+<td>canSetTag</td>
+<td>查询重写时用到，如果该Query是由原始查询转换为来则此字段为假，如果Query是由查询重写或查询规划时新增加的则此字段为真</td>
+</tr>
+<tr>
+<td>Node*</td>
+<td>utilityStmt</td>
+<td>定义游标或者不可优化的查询语句</td>
+</tr>
+<tr>
+<td>int</td>
+<td>resultRelation</td>
+<td>结果关系</td>
+</tr>
+<tr>
+<td>IntoClause*</td>
+<td>intoClause</td>
+<td>处理SELECT INTO和CREATE TABLE AS的信息</td>
+</tr>
+<tr>
+<td>bool</td>
+<td>hasAggs</td>
+<td></td>
+</tr>
+<tr>
+<td>bool</td>
+<td>hasWindowFuncs</td>
+<td></td>
+</tr>
+<tr>
+<td>bool</td>
+<td>hasSubLinks</td>
+<td></td>
+</tr>
+<tr>
+<td>bool</td>
+<td>hasDistincton</td>
+<td></td>
+</tr>
+<tr>
+<td>bool</td>
+<td>hasRecursive</td>
+<td></td>
+</tr>
+<tr>
+<td>List*</td>
+<td>cteList</td>
+<td></td>
+</tr>
+<tr>
+<td>List*</td>
+<td>rtable</td>
+<td></td>
+</tr>
+<tr>
+<td>FromExpr*</td>
+<td>jointree</td>
+<td>连接树，描述FROM和WHERE子句出现的连接</td>
+</tr>
+<tr>
+<td>List*</td>
+<td>targetList</td>
+<td></td>
+</tr>
+<tr>
+<td>List*</td>
+<td>returningList</td>
+<td></td>
+</tr>
+<tr>
+<td>List*</td>
+<td>groupClause</td>
+<td></td>
+</tr>
+<tr>
+<td>Node*</td>
+<td>havingQual</td>
+<td></td>
+</tr>
+<tr>
+<td>List*</td>
+<td>windowClause</td>
+<td></td>
+</tr>
+<tr>
+<td>List*</td>
+<td>sortClause</td>
+<td></td>
+</tr>
+<tr>
+<td>List*</td>
+<td>distinctClause</td>
+<td></td>
+</tr>
+<tr>
+<td>List*</td>
+<td>sortClause</td>
+<td></td>
+</tr>
+<tr>
+<td>List*</td>
+<td>limitOffset</td>
+<td></td>
+</tr>
+<tr>
+<td>List*</td>
+<td>limitCount</td>
+<td></td>
+</tr>
+<tr>
+<td>List*</td>
+<td>rowMarks</td>
+<td></td>
+</tr>
+<tr>
+<td>Node*</td>
+<td>setOperations</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="query-execution">Query Execution</h2>
+<h3 id="plan-node">Plan Node</h3>
+<h4 id="scan-node">Scan Node</h4>
+<h5 id="seqscannode">SeqScanNode</h5>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 10112-01-18</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/coding/pg%E5%86%85%E6%A0%B8/index.md" target="_blank">阅读原始文档</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"></div>
+</div>
+<div id="comments"><div id="valine" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://valine.js.org/">Valine</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">Reason Cave</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/valine/valine.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/css/lightgallery-bundle.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/valine@1.5.0/dist/Valine.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/algoliasearch@4.13.1/dist/algoliasearch-lite.umd.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typeit@8.6.0/dist/index.umd.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"valine":{"appId":"QGzwQXOqs5JOhN4RGPOkR2mR-MdYXbMMI","appKey":"WBmoGyJtbqUswvfLh6L8iEBr","avatar":"mp","el":"#valine","emojiCDN":"https://cdn.jsdelivr.net/npm/emoji-datasource-google@14.0.0/img/google/64/","emojiMaps":{"100":"1f4af.png","alien":"1f47d.png","anger":"1f4a2.png","angry":"1f620.png","anguished":"1f627.png","astonished":"1f632.png","black_heart":"1f5a4.png","blue_heart":"1f499.png","blush":"1f60a.png","bomb":"1f4a3.png","boom":"1f4a5.png","broken_heart":"1f494.png","brown_heart":"1f90e.png","clown_face":"1f921.png","cold_face":"1f976.png","cold_sweat":"1f630.png","confounded":"1f616.png","confused":"1f615.png","cry":"1f622.png","crying_cat_face":"1f63f.png","cupid":"1f498.png","dash":"1f4a8.png","disappointed":"1f61e.png","disappointed_relieved":"1f625.png","dizzy":"1f4ab.png","dizzy_face":"1f635.png","drooling_face":"1f924.png","exploding_head":"1f92f.png","expressionless":"1f611.png","face_vomiting":"1f92e.png","face_with_cowboy_hat":"1f920.png","face_with_hand_over_mouth":"1f92d.png","face_with_head_bandage":"1f915.png","face_with_monocle":"1f9d0.png","face_with_raised_eyebrow":"1f928.png","face_with_rolling_eyes":"1f644.png","face_with_symbols_on_mouth":"1f92c.png","face_with_thermometer":"1f912.png","fearful":"1f628.png","flushed":"1f633.png","frowning":"1f626.png","ghost":"1f47b.png","gift_heart":"1f49d.png","green_heart":"1f49a.png","grimacing":"1f62c.png","grin":"1f601.png","grinning":"1f600.png","hankey":"1f4a9.png","hear_no_evil":"1f649.png","heart":"2764-fe0f.png","heart_decoration":"1f49f.png","heart_eyes":"1f60d.png","heart_eyes_cat":"1f63b.png","heartbeat":"1f493.png","heartpulse":"1f497.png","heavy_heart_exclamation_mark_ornament":"2763-fe0f.png","hole":"1f573-fe0f.png","hot_face":"1f975.png","hugging_face":"1f917.png","hushed":"1f62f.png","imp":"1f47f.png","innocent":"1f607.png","japanese_goblin":"1f47a.png","japanese_ogre":"1f479.png","joy":"1f602.png","joy_cat":"1f639.png","kiss":"1f48b.png","kissing":"1f617.png","kissing_cat":"1f63d.png","kissing_closed_eyes":"1f61a.png","kissing_heart":"1f618.png","kissing_smiling_eyes":"1f619.png","laughing":"1f606.png","left_speech_bubble":"1f5e8-fe0f.png","love_letter":"1f48c.png","lying_face":"1f925.png","mask":"1f637.png","money_mouth_face":"1f911.png","nauseated_face":"1f922.png","nerd_face":"1f913.png","neutral_face":"1f610.png","no_mouth":"1f636.png","open_mouth":"1f62e.png","orange_heart":"1f9e1.png","partying_face":"1f973.png","pensive":"1f614.png","persevere":"1f623.png","pleading_face":"1f97a.png","pouting_cat":"1f63e.png","purple_heart":"1f49c.png","rage":"1f621.png","relaxed":"263a-fe0f.png","relieved":"1f60c.png","revolving_hearts":"1f49e.png","right_anger_bubble":"1f5ef-fe0f.png","robot_face":"1f916.png","rolling_on_the_floor_laughing":"1f923.png","scream":"1f631.png","scream_cat":"1f640.png","see_no_evil":"1f648.png","shushing_face":"1f92b.png","skull":"1f480.png","skull_and_crossbones":"2620-fe0f.png","sleeping":"1f634.png","sleepy":"1f62a.png","slightly_frowning_face":"1f641.png","slightly_smiling_face":"1f642.png","smile":"1f604.png","smile_cat":"1f638.png","smiley":"1f603.png","smiley_cat":"1f63a.png","smiling_face_with_3_hearts":"1f970.png","smiling_imp":"1f608.png","smirk":"1f60f.png","smirk_cat":"1f63c.png","sneezing_face":"1f927.png","sob":"1f62d.png","space_invader":"1f47e.png","sparkling_heart":"1f496.png","speak_no_evil":"1f64a.png","speech_balloon":"1f4ac.png","star-struck":"1f929.png","stuck_out_tongue":"1f61b.png","stuck_out_tongue_closed_eyes":"1f61d.png","stuck_out_tongue_winking_eye":"1f61c.png","sunglasses":"1f60e.png","sweat":"1f613.png","sweat_drops":"1f4a6.png","sweat_smile":"1f605.png","thinking_face":"1f914.png","thought_balloon":"1f4ad.png","tired_face":"1f62b.png","triumph":"1f624.png","two_hearts":"1f495.png","unamused":"1f612.png","upside_down_face":"1f643.png","weary":"1f629.png","white_frowning_face":"2639-fe0f.png","white_heart":"1f90d.png","wink":"1f609.png","woozy_face":"1f974.png","worried":"1f61f.png","yawning_face":"1f971.png","yellow_heart":"1f49b.png","yum":"1f60b.png","zany_face":"1f92a.png","zipper_mouth_face":"1f910.png","zzz":"1f4a4.png"},"enableQQ":false,"highlight":true,"lang":"zh-CN","pageSize":10,"placeholder":"你的评论 ...","recordIP":true,"serverURLs":"https://leancloud.hugoloveit.com","visitor":true}},"data":{"id-1":"Reason Cave","id-2":"Reason Cave"},"lightgallery":true,"search":{"algoliaAppID":"PASDMWALPK","algoliaIndex":"index.zh-cn","algoliaSearchKey":"b42948e51daaa93df92381c8e2ac0f93","highlightTag":"em","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"algolia"},"twemoji":true,"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
